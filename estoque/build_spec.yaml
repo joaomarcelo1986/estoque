@@ -1,0 +1,27 @@
+version: 0.1
+component: build
+timeoutInSeconds: 10000
+shell: bash
+steps:
+  - type: Command
+    name: "Build Docker Image"
+    command: |
+      docker build -t ${OCI_IMAGE_REPO}:${BUILD_RUN_ID} .
+  - type: Command
+    name: "Tag as latest"
+    command: |
+      docker tag ${OCI_IMAGE_REPO}:${BUILD_RUN_ID} ${OCI_IMAGE_REPO}:latest
+  - type: Command
+    name: "Login to OCIR"
+    command: |
+      echo $OCIR_PASSWORD | docker login ${OCIR_REGION}.ocir.io -u "${OCIR_USERNAME}" --password-stdin
+  - type: Command
+    name: "Push Docker Images"
+    command: |
+      docker push ${OCI_IMAGE_REPO}:${BUILD_RUN_ID}
+      docker push ${OCI_IMAGE_REPO}:latest
+outputArtifacts:
+  - name: image
+    type: DOCKER_IMAGE
+    location: ${OCI_IMAGE_REPO}:${BUILD_RUN_ID}
+
